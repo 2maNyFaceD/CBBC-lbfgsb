@@ -1,0 +1,13 @@
+[package]
+name = "CBBC_lbfgsb"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.79"
+vecfx = "0.1"
+
+[build-dependencies]
+cc = "1"
+bindgen = "0.69.2"
+
