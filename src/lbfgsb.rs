@@ -95,7 +95,7 @@ impl<E> LbfgsbProblem<E>
     /// Set lower bounds and upper bounds for input variables
     pub fn set_bounds<B>(&mut self, bounds: B)
         where
-            B: IntoIterator<Item = (Option<f64>, Option<f64>)>,
+            B: IntoIterator<Item = (f64, f64)>,
     {
         // nbd represents the type of bounds imposed on the variables, and must be
         // specified as follows:
@@ -105,25 +105,25 @@ impl<E> LbfgsbProblem<E>
         //          2 if x(i) has both lower and upper bounds, and
         //          3 if x(i) has only an upper bound.
         for (i, b) in bounds.into_iter().enumerate() {
-            match b {
+            match (b.0.is_nan(), b.1.is_nan()) {
                 // both lower and upper bonds
-                (Some(l), Some(u)) => {
-                    self.l[i] = l;
-                    self.u[i] = u;
+                (false, false) => {
+                    self.l[i] = b.0;
+                    self.u[i] = b.1;
                     self.nbd[i] = 2;
                 }
                 // unbounded
-                (None, None) => {
+                (true, true) => {
                     self.nbd[i] = 0;
                 }
                 // has only a lower bound
-                (Some(l), None) => {
-                    self.l[i] = l;
+                (false, true) => {
+                    self.l[i] = b.0;
                     self.nbd[i] = 1;
                 }
                 // has only a upper bound
-                (None, Some(u)) => {
-                    self.u[i] = u;
+                (true, false) => {
+                    self.u[i] = b.1;
                     self.nbd[i] = 3;
                 }
             }
@@ -348,7 +348,7 @@ pub fn lbfgsb<E>(x: Vec<f64>, bounds: &[(f64, f64)], eval_fn: E, m: usize, factr
         iprint,
     };
     let mut problem = LbfgsbProblem::build(x, eval_fn);
-    let bounds = bounds.into_iter().copied().map(|(l, u)| (Some(l), Some(u)));
+    let bounds = bounds.into_iter().copied().map(|(l, u)| (l, u));
     problem.set_bounds(bounds);
 
     let mut state = LbfgsbState::new(problem, param);
