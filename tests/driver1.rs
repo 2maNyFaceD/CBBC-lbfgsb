@@ -73,3 +73,39 @@ fn test_lbfgs() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test2_lbfgs() -> Result<()> {
+    const N: usize = 25;
+    let mut x = vec![0f64; N];
+
+    // We now provide nbd which defines the bounds on the variables:
+    // - l   specifies the lower bounds,
+    // - u   specifies the upper bounds.
+    //
+    // First set bounds on the odd-numbered variables.
+    let mut l = vec![0f64; N];
+    let mut u = vec![0f64; N];
+    for i in (1..=N).step_by(2) {
+        l[i - 1] = 1.;
+        u[i - 1] = f64::NAN;
+    }
+    // Next set bounds on the even-numbered variables.
+    for i in (2..=N).step_by(2) {
+        l[i - 1] = f64::NAN;
+        u[i - 1] = 100.;
+    }
+
+    // We now define the starting point.
+    for i in 1..=N {
+        x[i - 1] = 3.;
+    }
+    println!("     Solving sample problem (Rosenbrock test fcn).");
+    println!("      (f = 0.0 at the optimal solution.)");
+    let bounds: Vec<_> = l.into_iter().zip(u.into_iter()).collect();
+    let opt = lbfgsb(x, &bounds, evaluate, 5, 1E7, 1E-5, 1)?;
+    assert!(opt.fx() <= 1e-8);
+    assert!(dbg!(opt.gx().vec2norm()) < 1e-3);
+
+    Ok(())
+}
